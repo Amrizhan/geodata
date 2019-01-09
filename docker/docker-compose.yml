@@ -1,0 +1,59 @@
+version: '3'
+networks: 
+  proxy:
+    external: true
+  internal:
+    external: false
+services:
+ geoserver_test:
+  container_name: geoserver_test
+  restart: always
+  image: thinkwhere/geoserver:2.14
+  logging:
+      driver: "json-file"
+      options:
+          max-size: "10m"
+          max-file: "10"
+  labels:
+      - "traefik.enable=true"
+      - "traefik.backend=geoserver_test"
+      - "traefik.frontend.rule=Host:geo.egistic.kz"
+      - "traefik.docker.network=proxy"
+      - "traefik.port=8084" 
+  ports:
+   - "8084:8084"
+  environment:
+    - GEOSERVER_LOG_LOCATION=/opt/geoserver/data_dir/logs/geoserver.log
+  volumes:
+    - ~/geoserver_data:/opt/geoserver/data_dir 
+    - ~/tomcat_settings/logs_8085:/usr/local/tomcat/logs 
+    - ~/Rasters:/root/Rasters
+ traefik:
+  image: traefik:latest   
+  container_name: traefik
+  environment:
+      - LETS_ENCRYPT_TEST_MODE=false
+      - LETS_ENCRYPT_EMAIL=info@egistic.kz
+      - SWARM_MODE=false
+  ports:
+      - "80:80"
+      - "443:443"
+  volumes:
+     - /var/run/docker.sock:/var/run/docker.sock
+     - /home/zhandos/docker/traefik.toml:/traefik.toml
+  labels:
+      - "traefik.enable=true"
+      - "traefik.backend=traefik"
+      - "traefik.frontend.rule=Host:geoserver.egistic.kz"
+      - "traefik.port=8080"
+      - "traefik.docker.network=proxy"
+      - "traefik.frontend.headers.SSLRedirect=true"
+      - "traefik.frontend.headers.STSSeconds=315360000"
+      - "traefik.frontend.headers.browserXSSFilter=true"
+      - "traefik.frontend.headers.contentTypeNosniff=true"
+      - "traefik.frontend.headers.forceSTSHeader=true"
+      - "traefik.frontend.headers.SSLHost=egistic.kz"
+      - "traefik.frontend.headers.STSIncludeSubdomains=true"
+      - "traefik.frontend.headers.STSPreload=true"
+      - "traefik.frontend.headers.frameDeny=true" 
+      - "traefik.frontend.entryPoints=https"

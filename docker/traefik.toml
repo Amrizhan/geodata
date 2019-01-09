@@ -1,0 +1,45 @@
+#debug = true
+
+logLevel = "ERROR" #DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+InsecureSkipVerify = true 
+defaultEntryPoints = ["http","https"]
+
+# WEB interface of Traefik - it will show web page with overview of frontend and backend configurations 
+[web]                                                                                                                                                                                                       
+  [web.auth.basic]                                                                                                                                                                                          
+   users = ["admin:$apr1$rfDKwcWx$F0V3PzGbKzSwMlyvgwIZs/"]   
+# Force HTTPS
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+
+#[file]
+#  watch = true
+#  filename = "home/zhandos/docker/traefik.toml"
+
+# Let's encrypt configuration
+[acme]
+email = "info@egistic.kz" #any email id will work
+storage="acme.json"
+entryPoint = "https"
+acmeLogging=true 
+onDemand = false #create certificate when container is created
+onHostRule = true
+  # Use a HTTP-01 acme challenge rather than TLS-SNI-01 challenge
+  [acme.httpChallenge]
+  entryPoint = "http"
+
+   
+# Connection to docker host system (docker.sock)
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "EGISTIC.KZ"
+watch = true
+# This will hide all docker containers that don't have explicitly  
+# set label to "enable"
+exposedbydefault = false
